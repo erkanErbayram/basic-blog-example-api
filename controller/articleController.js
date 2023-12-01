@@ -5,7 +5,6 @@ const key = "article";
 const getArticle = async (req, res) => {
   let value;
   try {
-    // await Article.deleteMany()
     let redisValue = await redisClient.get(key);
     if (redisValue != null && redisValue.length > 0) {
       const parsedData = JSON.parse(redisValue);
@@ -30,26 +29,6 @@ const getArticle = async (req, res) => {
   } catch (error) {
     console.error("Hata:", error);
     return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-const setArticleDeneme = async (req, res) => {
-  try {
-    const article = new Article(req.body);
-    await article.save();
-    redisClient.del(key);
-
-    const articlesFromMongo = await Article.find();
-
-    if (articlesFromMongo.length > 0) {
-      redisClient.set(key, JSON.stringify(articlesFromMongo));
-      redisClient.expire(key, 3600);
-    }
-
-    res.json(article);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
   }
 };
 const setArticle = async (req, res) => {
@@ -94,18 +73,7 @@ const setArticle = async (req, res) => {
   }
 };
 
-const indexName = "articles";
 
-// Makale verilerini Elasticsearch'e indeksleme
-async function indexArticle(article) {
-  await esClient.index({
-    index: indexName,
-    body: article,
-    headers: {
-        'Content-Type': 'application/json'
-      }
-  });
-}
 module.exports = {
   getArticle,
   setArticle,
